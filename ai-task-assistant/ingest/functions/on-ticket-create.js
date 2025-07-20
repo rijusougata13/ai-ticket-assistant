@@ -1,5 +1,7 @@
 import Ticket from "../../models/tickets.js";
+import User from "../../models/users.js";
 import { analyzeTicket } from "../../utils/ai.js";
+import { sendEmail } from "../../utils/mailer.js";
 import { inngest } from "../client.js";
 
 export const onTicketCreate = inngest.createFunction(
@@ -41,7 +43,7 @@ export const onTicketCreate = inngest.createFunction(
                     role: "moderator",
                     skills: {
                         $elemMatch: {
-                            $regex: relatedskills.join("|"),
+                            $regex: relatedSkills.join("|"),
                             $options: "i",
                         },
                     },
