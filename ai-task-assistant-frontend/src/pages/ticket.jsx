@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 
 export default function TicketDetailsPage() {
   const { id } = useParams();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const token = localStorage.getItem("token");
 
@@ -13,7 +14,7 @@ export default function TicketDetailsPage() {
     const fetchTicket = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_SERVER_URL}/tickets/${id}`,
+          `${import.meta.env.VITE_SERVER_URL}/api/tickets/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -24,73 +25,138 @@ export default function TicketDetailsPage() {
         if (res.ok) {
           setTicket(data.ticket);
         } else {
-          alert(data.message || "Failed to fetch ticket");
+          setError(data.message || "Failed to fetch ticket");
         }
       } catch (err) {
         console.error(err);
-        alert("Something went wrong");
+        setError("Something went wrong");
       } finally {
         setLoading(false);
       }
     };
 
     fetchTicket();
-  }, [id]);
+  }, [id, token]);
 
-  if (loading)
-    return <div className="text-center mt-10">Loading ticket details...</div>;
-  if (!ticket) return <div className="text-center mt-10">Ticket not found</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4 max-w-3xl">
+        <div className="alert alert-error">
+          <span>{error}</span>
+        </div>
+        <Link to="/" className="btn btn-primary mt-4">
+          Back to Tickets
+        </Link>
+      </div>
+    );
+  }
+
+  if (!ticket) {
+    return (
+      <div className="container mx-auto p-4 max-w-3xl">
+        <div className="alert alert-warning">
+          <span>Ticket not found</span>
+        </div>
+        <Link to="/" className="btn btn-primary mt-4">
+          Back to Tickets
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Ticket Details</h2>
+    <div className="container mx-auto p-4 max-w-4xl">
+      <div className="mb-4">
+        <Link to="/" className="btn btn-ghost">
+          ← Back to Tickets
+        </Link>
+      </div>
 
-      <div className="card bg-gray-800 shadow p-4 space-y-4">
-        <h3 className="text-xl font-semibold">{ticket.title}</h3>
-        <p>{ticket.description}</p>
-
-        {/* Conditionally render extended details */}
-        {ticket.status && (
-          <>
-            <div className="divider">Metadata</div>
-            <p>
-              <strong>Status:</strong> {ticket.status}
-            </p>
-            {ticket.priority && (
-              <p>
-                <strong>Priority:</strong> {ticket.priority}
-              </p>
-            )}
-
-            {ticket.relatedSkills?.length > 0 && (
-              <p>
-                <strong>Related Skills:</strong>{" "}
-                {ticket.relatedSkills.join(", ")}
-              </p>
-            )}
-
-            {ticket.helpfulNotes && (
-              <div>
-                <strong>Helpful Notes:</strong>
-                <div className="prose max-w-none rounded mt-2">
-                  <ReactMarkdown>{ticket.helpfulNotes}</ReactMarkdown>
+      <div className="card bg-base-100 shadow-xl">
+        <div className="card-body">
+          <div className="flex justify-between items-start mb-4">
+            <h1 className="card-title text-3xl">{ticket.title}</h1>
+            <div className="flex flex-col space-y-2">
+              {ticket.status && (
+                <div className="badge badge-primary badge-lg">{ticket.status}</div>
+              )}
+              {ticket.priority && (
+                <div className={`badge badge-lg ${
+                  ticket.priority === 'HIGH' ? 'badge-error' :
+                  ticket.priority === 'MEDIUM' ? 'badge-warning' :
+                  'badge-info'
+                }`}>
+                  {ticket.priority}
                 </div>
+              )}
+            </div>
+          </div>
+
+          <div className="divider">Description</div>
+          <div className="prose max-w-none">
+            <p className="text-lg">{ticket.description}</p>
+          </div>
+
+          {/* Extended ticket information */}
+          {(ticket.relatedSkills?.length > 0 || ticket.helpfulNotes || ticket.assignedTo) && (
+            <>
+              <div className="divider">AI Analysis & Assignment</div>
+              
+              {ticket.relatedSkills?.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="font-semibold text-lg mb-2">Related Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {ticket.relatedSkills.map((skill, index) => (
+                      <div key={index} className="badge badge-outline badge-lg">
+                        {skill}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {ticket.helpfulNotes && (
+                <div className="mb-4">
+                  <h3 className="font-semibold text-lg mb-2">AI Analysis & Helpful Notes</h3>
+                  <div className="bg-base-200 p-4 rounded-lg">
+                    <div className="prose max-w-none">
+                      <ReactMarkdown>{ticket.helpfulNotes}</ReactMarkdown>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {ticket.assignedTo && (
+                <div className="mb-4">
+                  <h3 className="font-semibold text-lg mb-2">Assignment</h3>
+                  <div className="alert alert-info">
+                    <span>Assigned to: <strong>{ticket.assignedTo.email}</strong></span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="divider">Metadata</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-semibold">Created:</span> {new Date(ticket.createdAt).toLocaleString()}
+            </div>
+            {ticket.updatedAt && ticket.updatedAt !== ticket.createdAt && (
+              <div>
+                <span className="font-semibold">Updated:</span> {new Date(ticket.updatedAt).toLocaleString()}
               </div>
             )}
-
-            {ticket.assignedTo && (
-              <p>
-                <strong>Assigned To:</strong> {ticket.assignedTo?.email}
-              </p>
-            )}
-
-            {ticket.createdAt && (
-              <p className="text-sm text-gray-500 mt-2">
-                Created At: {new Date(ticket.createdAt).toLocaleString()}
-              </p>
-            )}
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );

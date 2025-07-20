@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function CheckAuth({ children, protectedRoute }) {
+function CheckAuth({ children, protected: protectedRoute }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +24,9 @@ function CheckAuth({ children, protectedRoute }) {
   }, [navigate, protectedRoute]);
 
   if (loading) {
-    return <div>loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">
+      <span className="loading loading-spinner loading-lg"></span>
+    </div>;
   }
   return children;
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function SignupPage() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "", skills: "" });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -14,14 +14,23 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      const skillsArray = form.skills
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+
       const res = await fetch(
-        `${import.meta.env.VITE_SERVER_URL}/user/signup`,
+        `${import.meta.env.VITE_SERVER_URL}/api/user/signup`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify({
+            email: form.email,
+            password: form.password,
+            skills: skillsArray,
+          }),
         }
       );
 
@@ -68,6 +77,15 @@ export default function SignupPage() {
             required
           />
 
+          <input
+            type="text"
+            name="skills"
+            placeholder="Skills (comma-separated, e.g., JavaScript, React, Node.js)"
+            className="input input-bordered"
+            value={form.skills}
+            onChange={handleChange}
+          />
+
           <div className="form-control mt-4">
             <button
               type="submit"
@@ -76,6 +94,15 @@ export default function SignupPage() {
             >
               {loading ? "Signing up..." : "Sign Up"}
             </button>
+          </div>
+
+          <div className="text-center mt-4">
+            <p className="text-sm">
+              Already have an account?{" "}
+              <a href="/login" className="link link-primary">
+                Login
+              </a>
+            </p>
           </div>
         </form>
       </div>

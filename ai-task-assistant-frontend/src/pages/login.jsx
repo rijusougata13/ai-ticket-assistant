@@ -14,7 +14,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/user/login`, {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,6 +73,15 @@ export default function LoginPage() {
             >
               {loading ? "Logging in..." : "Login"}
             </button>
+          </div>
+
+          <div className="text-center mt-4">
+            <p className="text-sm">
+              Don't have an account?{" "}
+              <a href="/signup" className="link link-primary">
+                Sign up
+              </a>
+            </p>
           </div>
         </form>
       </div>

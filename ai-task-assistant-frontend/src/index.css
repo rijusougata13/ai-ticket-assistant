@@ -1,2 +1,12 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+@theme {
+  --default-transition-duration: 200ms;
+  --default-font-family: var(--font-family-sans);
+  --default-font-feature-settings: var(--font-feature-settings-normal);
+  --default-font-variation-settings: var(--font-variation-settings-normal);
+  --default-mono-font-family: var(--font-family-mono);
+  --default-mono-font-feature-settings: var(--font-feature-settings-mono);
+  --default-mono-font-variation-settings: var(--font-variation-settings-mono);
+}
